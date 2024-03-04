@@ -193,7 +193,9 @@ public class WeaponController : MonoBehaviour
                 //EnableGunWeapon(weaponId);
                 Debug.Log(weaponId + "wid");
                 photonView.RPC("EnableGunWeapon", RpcTarget.AllBuffered, weaponId);
-                photonView.RPC("WeaponEquippedbyPlayer", RpcTarget.AllBuffered);
+                WeaponEquippedbyPlayer();
+                Gamemanager.instance.SetPlayerState(2);
+                //photonView.RPC("WeaponEquippedbyPlayer", RpcTarget.AllBuffered);
             }
             else if (isGunDetect == false && isSwordDetect == true)
             {
@@ -201,7 +203,9 @@ public class WeaponController : MonoBehaviour
                 //EnableSword(weaponId);
                 Debug.Log(weaponId + "wid");
                 photonView.RPC("EnableSword", RpcTarget.AllBuffered, weaponId);
-                photonView.RPC("WeaponEquippedbyPlayer", RpcTarget.AllBuffered);
+                WeaponEquippedbyPlayer();
+                Gamemanager.instance.SetPlayerState(3);
+                //photonView.RPC("WeaponEquippedbyPlayer", RpcTarget.AllBuffered);
             }
             else
             {
@@ -216,19 +220,38 @@ public class WeaponController : MonoBehaviour
             DestroyweaponObj = null;
             // DisableWeapons();
             photonView.RPC("DisableWeapons", RpcTarget.AllBuffered);
+            Gamemanager.instance.SetPlayerState(1);
             //photonView.RPC("WeaponDroppedbyPlayer", RpcTarget.AllBuffered);
             WeaponDroppedbyPlayer();
         }
     }
 
-    [PunRPC]
+    
     public void WeaponEquippedbyPlayer()
     {
-        Destroy(DestroyweaponObj);
+        
+        if(PhotonNetwork.IsMasterClient)
+        {
+            Gamemanager.instance.GRemoveWO(DestroyweaponObj);
+            Gamemanager.instance.GRemoveOO(DestroyweaponObj);
+            PhotonNetwork.Destroy(DestroyweaponObj);
+        }
+        else
+        {
+            int viewId = DestroyweaponObj.GetComponent<PhotonView>().ViewID;
+            Debug.Log("ViewID of weapon: " + viewId);
+            photonView.RPC("RPC_ForceMasterClientWeapon", RpcTarget.MasterClient, viewId);
+        }
         Debug.Log("Weapon Destroyed and synced");
     }
 
-    
+    [PunRPC]
+    void RPC_ForceMasterClientWeapon(int viewID)
+    {
+        PhotonNetwork.Destroy(PhotonView.Find(viewID).gameObject);
+        
+    }
+
     public void WeaponDroppedbyPlayer()
     {
         Vector3 PlayerPos = this.transform.position;
@@ -237,6 +260,8 @@ public class WeaponController : MonoBehaviour
         if(SpawnweaponObj != null)
         {
             GameObject Weapon = PhotonNetwork.Instantiate(SpawnweaponObj.name, PlayerPos, Quaternion.identity);
+            Gamemanager.instance.GAddWO(Weapon);
+            Gamemanager.instance.GAddOO(Weapon);
             Weapon.transform.SetParent(Gamemanager.instance.ObjectContainer, false);
             Weapon.SetActive(true);
             Debug.Log("Weapon spawned and synced: " + SpawnweaponObj.name);

@@ -25,6 +25,7 @@ public class BansheePlayer : MonoBehaviourPun
     private PlayerMovementController playerMovementController;
 
     public WeaponController gunEquipController;
+    public HealthController healthController;
 
     public bool DisableInputs = false;
 
@@ -38,11 +39,15 @@ public class BansheePlayer : MonoBehaviourPun
     public string PlayerName;
     public GameObject PlayerObj;
 
+    public bool isGunEquipped =  false;
+    public bool isIdle = true;
+    public bool isSwordEquipped =  false;
     private void Awake()
     {
         if (photonView.IsMine)
         {
             Gamemanager.instance.LocalPlayer = this.gameObject;
+           // Gamemanager.instance.SetPlayerState(1);
             PlayerCam.SetActive(true);
             PlayerNameText.text = PhotonNetwork.NickName;
             PlayerName = PhotonNetwork.NickName;
@@ -57,11 +62,16 @@ public class BansheePlayer : MonoBehaviourPun
         }
     }
 
+
+
     private void Start()
     {
         gunEquipController = GetComponent<WeaponController>();
         playerMovementController = GetComponent<PlayerMovementController>();
+        healthController = GetComponent<HealthController>();
     }
+
+   
 
     // Update is called once per frame
     void Update()
@@ -75,7 +85,10 @@ public class BansheePlayer : MonoBehaviourPun
         }
     }
 
-    
+    public void SetPlayerAnimator()
+    {
+        playerMovementController.SetAnimator();
+    }
 
     //Player Movement
     private void PlayerMovementControl()
@@ -146,7 +159,8 @@ public class BansheePlayer : MonoBehaviourPun
     //Shoot
     private void Shoot()
     {
-        if(Input.GetKeyDown(KeyCode.F))
+        playerMovementController.Shoot();
+        if (Input.GetKeyDown(KeyCode.F))
         {
             gunEquipController.Shoot(isfacingRight);
         }
@@ -159,12 +173,46 @@ public class BansheePlayer : MonoBehaviourPun
             ScoreUpdate();
             coin = collision.gameObject;
             PhotonView photonView = PhotonView.Get(this);
-            photonView.RPC("CoinCollected", RpcTarget.AllBuffered);
-            //Debug.Log("Coin Destroyed");
+            if (PhotonNetwork.IsMasterClient)
+            {
+                GemCollected(coin);
+            }
+            else
+            {
+                int viewID = collision.GetComponent<PhotonView>().ViewID;
+                Debug.Log("ViewID of gem: " + viewID);
+                photonView.RPC("RPC_GemCollected", RpcTarget.MasterClient, viewID);
+
+            }
         }
+
+        //if(collision.gameObject.tag == "Shield")
+        //{
+        //    coin = collision.gameObject;
+        //    PhotonView photonView = PhotonView.Get(this);
+        //    healthController.photonView.RPC("ShieldHealth", RpcTarget.AllBuffered);
+        //    photonView.RPC("RPC_GemCollected", RpcTarget.MasterClient);
+        //}
     }
 
-    
+    public void GemCollected(GameObject Gem)
+    {
+        Gamemanager.instance.GRemoveSO(Gem);
+        Gamemanager.instance.GRemoveOO(Gem);
+        PhotonNetwork.Destroy(Gem);
+    }
+
+    [PunRPC]
+    public void RPC_GemCollected(int viewId)
+    {
+        if(PhotonView.Find(viewId).gameObject != null)
+        {
+            PhotonNetwork.Destroy(PhotonView.Find(viewId).gameObject);
+        }
+        
+        //Debug.Log("Coin Destroyed and synced");
+    }
+
     public void ScoreUpdate()
     {
         if (photonView.IsMine)
@@ -175,12 +223,8 @@ public class BansheePlayer : MonoBehaviourPun
 
     
 
-    [PunRPC]
-    public void CoinCollected()
-    {
-        Destroy(coin);
-        //Debug.Log("Coin Destroyed and synced");
-    }
 
    
+
+
 }

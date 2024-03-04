@@ -4689,7 +4689,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 45d4daf4531dba44693f27e9456cf7cc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  LobbyGameSceneIndex: 1
+  LobbyGameSceneIndex: 2
 --- !u!4 &1369149935
 Transform:
   m_ObjectHideFlags: 0

@@ -40,6 +40,16 @@ public class HealthController : MonoBehaviour
         }
     }
 
+    public void EnableInputs()
+    {
+        playerScript.DisableInputs = false;
+    }
+    public void DisableInputs()
+    {
+        playerScript.DisableInputs = true;
+    }
+
+
     [PunRPC]
     public void death()
     {
@@ -61,13 +71,12 @@ public class HealthController : MonoBehaviour
         playerCanvas.SetActive(true);
     }
 
-    public void EnableInputs()
+    [PunRPC]
+    public void ShieldHealth()
     {
-        playerScript.DisableInputs = false;
-    }
-    public void DisableInputs()
-    {
-        playerScript.DisableInputs = true;
+        health = 1;
+        fillImage.fillAmount = 1f;
+        CheckHealth();
     }
 
     [PunRPC]

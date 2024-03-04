@@ -703,6 +703,7 @@ MonoBehaviour:
   Attack: 0
   InputChanged: 0
   gunEquipController: {fileID: 8813198973294644958}
+  healthController: {fileID: 0}
   DisableInputs: 0
   anim: {fileID: 7472614226302116964}
   playerProfileData:
@@ -872,7 +873,7 @@ MonoBehaviour:
     SynchronizeType: 2
     Name: Horizontal
   m_SynchronizeLayers:
-  - SynchronizeType: 2
+  - SynchronizeType: 0
     LayerIndex: 0
 --- !u!114 &2087812397649773799
 MonoBehaviour:
